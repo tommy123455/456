@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpellPicture - 英文生字復習</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232D5A4A'/><text x='50' y='68' font-family='Arial' font-size='50' font-weight='bold' text-anchor='middle' fill='%23FFD93D'>S</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --primary: #2D5A4A;
+      --primary-light: #3D7A64;
+      --secondary: #8B6914;
+      --accent: #FFD93D;
+      --accent-dark: #E6C235;
+      --success: #4CAF50;
+      --error: #E57373;
+      --background: #1A1A2E;
+      --background-light: #252542;
+      --text-primary: #FFFFFF;
+      --text-secondary: #B8C5D6;
+      --shadow: rgba(0, 0, 0, 0.3);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--background);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--background-light); }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+    ::selection { background: var(--accent); color: var(--background); }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 40% { transform: translateX(10px); } 60% { transform: translateX(-10px); } 80% { transform: translateX(10px); } }
+    @keyframes starBurst { 0% { transform: scale(0) rotate(0deg); opacity: 1; } 50% { transform: scale(1.5) rotate(180deg); opacity: 1; } 100% { transform: scale(0) rotate(360deg); opacity: 0; } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes scoreFly { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-50px) scale(1.5); opacity: 0; } }
+    @keyframes confetti { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-200px) rotate(720deg); opacity: 0; } }
+    @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    .app { min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+    .main-content { flex: 1; display: flex; flex-direction: column; position: relative; z-index: 1; padding: 24px 0; }
+
+    .bg-decoration { position: fixed; pointer-events: none; z-index: 0; }
+    .bg-circle { border-radius: 50%; opacity: 0.05; background: var(--accent); }
+    .bg-circle-1 { width: 300px; height: 300px; top: -100px; right: -100px; }
+    .bg-circle-2 { width: 200px; height: 200px; bottom: 10%; left: -50px; }
+    .bg-circle-3 { width: 150px; height: 150px; top: 40%; right: 5%; }
+
+    .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 24px; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 600;
+      border: none; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: var(--background); box-shadow: 0 4px 12px rgba(255, 217, 61, 0.3); }
+    .btn-primary:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 6px 20px rgba(255, 217, 61, 0.4); }
+    .btn-secondary { background: transparent; color: var(--text-primary); border: 2px solid var(--text-secondary); }
+    .btn-secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--error); color: white; }
+
+    .card { background: var(--background-light); border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 8px 32px var(--shadow); }
+
+    .progress-bar { width: 100%; height: 8px; background: var(--background-light); border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--success)); border-radius: 4px; transition: width 0.3s ease; }
+
+    .keyboard { display: flex; flex-direction: column; gap: 8px; padding: 16px; background: var(--background-light); border-radius: var(--radius-lg); }
+    .keyboard-row { display: flex; justify-content: center; gap: 6px; }
+    .key { min-width: 40px; height: 48px; display: flex; align-items: center; justify-content: center; background: var(--primary); color: var(--text-primary); font-family: 'Nunito', sans-serif; font-size: 18px; font-weight: 700; border: none; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s ease; user-select: none; }
+    .key:hover { background: var(--primary-light); transform: translateY(-2px); }
+    .key:active { transform: translateY(0); background: var(--accent); color: var(--background); }
+    .key-wide { min-width: 70px; font-size: 14px; }
+
+    .letter-box { width: 48px; height: 56px; display: flex; align-items: center; justify-content: center; background: var(--background-light); border: 2px solid var(--primary); border-radius: var(--radius-sm); font-family: 'Patrick Hand', cursive; font-size: 32px; color: var(--text-primary); transition: all 0.2s ease; }
+    .letter-box.filled { border-color: var(--accent); background: rgba(255, 217, 61, 0.1); }
+    .letter-box.correct { border-color: var(--success); background: rgba(76, 175, 80, 0.2); }
+    .letter-box.wrong { border-color: var(--error); background: rgba(229, 115, 115, 0.2); }
+
+    .image-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 8px 32px var(--shadow); }
+    .image-container img { width: 100%; height: auto; display: block; }
+    .image-loading { width: 100%; aspect-ratio: 4/3; background: linear-gradient(90deg, var(--background-light) 25%, var(--primary) 50%, var(--background-light) 75%); background-size: 200% 100%; animation: pulse 1.5s infinite; }
+    .score-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: 'Fredoka One', cursive; font-size: 48px; color: var(--accent); text-shadow: 2px 2px 4px var(--shadow); pointer-events: none; animation: scoreFly 0.8s ease-out forwards; }
+    .star { position: absolute; width: 20px; height: 20px; background: var(--accent); clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); animation: starBurst 0.6s ease-out forwards; }
+
+    /* Welcome Screen */
+    .welcome-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px 24px; animation: fadeIn 0.5s ease-out; }
+    .welcome-logo { font-size: 72px; margin-bottom: 16px; animation: float 3s ease-in-out infinite; }
+    .welcome-title { font-family: 'Fredoka One', cursive; font-size: 56px; color: var(--accent); margin-bottom: 8px; text-shadow: 2px 4px 8px rgba(0, 0, 0, 0.3); }
+    .welcome-subtitle { font-size: 20px; color: var(--text-secondary); margin-bottom: 40px; max-width: 400px; }
+    .welcome-description { display: flex; gap: 24px; margin-bottom: 48px; flex-wrap: wrap; justify-content: center; }
+    .welcome-feature { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 24px; background: var(--background-light); border-radius: var(--radius-lg); min-width: 140px; }
+    .welcome-feature-icon { font-size: 32px; }
+    .welcome-feature-text { font-size: 14px; color: var(--text-secondary); }
+    .start-button { padding: 16px 48px; font-size: 20px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: var(--background); border: none; border-radius: var(--radius-xl); cursor: pointer; font-family: 'Fredoka One', cursive; transition: all 0.3s ease; box-shadow: 0 8px 24px rgba(255, 217, 61, 0.4); }
+    .start-button:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 12px 32px rgba(255, 217, 61, 0.5); }
+    .total-score { margin-top: 32px; padding: 12px 24px; background: var(--background-light); border-radius: var(--radius-lg); display: flex; align-items: center; gap: 8px; font-size: 16px; color: var(--text-secondary); }
+    .total-score span { color: var(--accent); font-family: 'Fredoka One', cursive; font-size: 24px; }
+
+    /* Mode Selection Screen */
+    .mode-screen { flex: 1; display: flex; flex-direction: column; padding: 24px; animation: fadeIn 0.4s ease-out; }
+    .mode-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .mode-title { font-family: 'Fredoka One', cursive; font-size: 32px; color: var(--accent); }
+    .back-button { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: transparent; border: 2px solid var(--text-secondary); color: var(--text-primary); border-radius: var(--radius-md); cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 14px; transition: all 0.2s ease; }
+    .back-button:hover { border-color: var(--accent); color: var(--accent); }
+    .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
+    .mode-card { position: relative; padding: 32px 24px; background: var(--background-light); border-radius: var(--radius-xl); cursor: pointer; transition: all 0.3s ease; border: 3px solid transparent; overflow: hidden; }
+    .mode-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.1; background: var(--card-color, var(--accent)); }
+    .mode-card:hover { transform: translateY(-8px); border-color: var(--card-color, var(--accent)); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4); }
+    .mode-icon { font-size: 64px; margin-bottom: 16px; }
+    .mode-name { font-family: 'Fredoka One', cursive; font-size: 28px; margin-bottom: 8px; color: var(--card-color, var(--accent)); }
+    .mode-desc { font-size: 16px; color: var(--text-secondary); line-height: 1.5; }
+    .mode-badge { position: absolute; top: 16px; right: 16px; padding: 4px 12px; background: var(--card-color, var(--accent)); color: var(--background); font-size: 12px; font-weight: bold; border-radius: 20px; }
+
+    /* Topic Screen */
+    .topic-screen { padding: 24px; animation: fadeIn 0.4s ease-out; }
+    .topic-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+    .topic-title { font-family: 'Fredoka One', cursive; font-size: 32px; color: var(--accent); }
+    .topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; max-width: 900px; margin: 0 auto; }
+    .topic-card { position: relative; padding: 24px; background: var(--background-light); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.3s ease; border: 2px solid transparent; overflow: hidden; }
+    .topic-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--card-color, var(--accent)); }
+    .topic-card:hover { transform: translateY(-4px); border-color: var(--card-color, var(--accent)); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3); }
+    .topic-emoji { font-size: 48px; margin-bottom: 12px; }
+    .topic-name { font-family: 'Fredoka One', cursive; font-size: 24px; margin-bottom: 8px; }
+    .topic-meta { display: flex; align-items: center; justify-content: space-between; font-size: 14px; color: var(--text-secondary); }
+    .topic-difficulty { color: var(--accent); }
+    .topic-words { display: flex; align-items: center; gap: 4px; }
+
+    /* Game Screen */
+    .game-screen { display: flex; flex-direction: column; min-height: calc(100vh - 48px); animation: fadeIn 0.4s ease-out; }
+    .game-header { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+    .game-score { display: flex; align-items: center; gap: 8px; font-family: 'Fredoka One', cursive; font-size: 24px; color: var(--accent); }
+    .game-progress { display: flex; align-items: center; gap: 16px; }
+    .game-progress-text { font-size: 16px; color: var(--text-secondary); }
+    .game-controls { display: flex; gap: 8px; }
+    .control-button { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--background-light); border: none; border-radius: var(--radius-md); color: var(--text-primary); cursor: pointer; transition: all 0.2s ease; }
+    .control-button:hover { background: var(--primary); }
+    .control-button.muted { color: var(--error); }
+    .game-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 0 24px; gap: 24px; }
+    .game-image-section { width: 100%; max-width: 450px; animation: slideUp 0.4s ease-out; }
+    .game-image-container { position: relative; width: 100%; aspect-ratio: 4/3; border-radius: var(--radius-xl); overflow: hidden; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4); }
+.game-image-container img { width: 100%; height: 100%; object-fit: contain; }
+    .hint-bar { display: flex; justify-content: center; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .hint-button { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--background-light); border: 1px solid var(--primary); border-radius: var(--radius-md); color: var(--text-primary); font-size: 14px; cursor: pointer; transition: all 0.2s ease; }
+    .hint-button:hover:not(:disabled) { background: var(--primary); }
+    .hint-button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .hint-cost { font-size: 12px; color: var(--error); }
+    .word-hints { width: 100%; max-width: 500px; margin-top: 8px; text-align: center; }
+    .hint-display { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+    .hint-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+    .hint-value { font-family: 'Patrick Hand', cursive; font-size: 24px; color: var(--accent); }
+    .letter-count { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; }
+    .letter-slot { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--background-light); border: 1px dashed var(--primary); border-radius: 4px; font-size: 14px; color: var(--text-secondary); }
+    .first-letter { color: var(--accent); font-weight: bold; border-style: solid; }
+    .speaker-button { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: var(--primary); border: none; border-radius: 50%; color: var(--text-primary); cursor: pointer; transition: all 0.2s ease; }
+    .speaker-button:hover { background: var(--primary-light); transform: scale(1.1); }
+    .input-section { width: 100%; max-width: 600px; animation: slideUp 0.5s ease-out; }
+    .letter-input-display { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; min-height: 64px; }
+    .submit-section { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .feedback-section { min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 16px; }
+    .feedback-correct { color: var(--success); }
+    .feedback-wrong { color: var(--error); }
+    .feedback-correct .feedback-icon { font-size: 48px; animation: bounce 0.5s ease; }
+    .feedback-wrong .feedback-icon { font-size: 48px; animation: shake 0.5s ease; }
+    .feedback-message { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+    .feedback-answer { font-family: 'Patrick Hand', cursive; font-size: 28px; margin-bottom: 16px; }
+    .feedback-actions { display: flex; gap: 12px; }
+    .keyboard-container { width: 100%; max-width: 700px; margin: 0 auto; animation: slideUp 0.6s ease-out; }
+
+    /* Picture Selection Mode */
+    .word-display { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 24px; }
+    .word-text { font-family: 'Fredoka One', cursive; font-size: 48px; color: var(--accent); text-shadow: 2px 4px 8px rgba(0, 0, 0, 0.3); }
+    .word-pronunciation { font-size: 18px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+    .picture-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; max-width: 500px; margin: 0 auto; }
+    .picture-option { position: relative; aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: all 0.3s ease; border: 3px solid transparent; }
+    .picture-option:hover { transform: scale(1.05); border-color: var(--accent); }
+    .picture-option.correct { border-color: var(--success); background: rgba(76, 175, 80, 0.3); }
+    .picture-option.wrong { border-color: var(--error); background: rgba(229, 115, 115, 0.3); }
+    .picture-option img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Chinese Mode */
+    .chinese-prompt { text-align: center; margin-bottom: 16px; }
+    .chinese-text { font-size: 36px; font-weight: bold; color: var(--accent); margin-bottom: 8px; }
+    .chinese-hint { font-size: 14px; color: var(--text-secondary); }
+
+    /* Results Screen */
+    .results-screen { padding: 24px; animation: fadeIn 0.4s ease-out; }
+    .results-header { text-align: center; margin-bottom: 40px; }
+    .results-title { font-family: 'Fredoka One', cursive; font-size: 40px; color: var(--accent); margin-bottom: 8px; }
+    .results-subtitle { font-size: 18px; color: var(--text-secondary); }
+    .results-card { max-width: 500px; margin: 0 auto 32px; text-align: center; }
+    .results-score { font-family: 'Fredoka One', cursive; font-size: 72px; color: var(--accent); margin-bottom: 8px; animation: bounce 0.5s ease; }
+    .results-score-label { font-size: 18px; color: var(--text-secondary); margin-bottom: 24px; }
+    .results-stats { display: flex; justify-content: center; gap: 32px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-item { display: flex; flex-direction: column; align-items: center; }
+    .stat-value { font-family: 'Fredoka One', cursive; font-size: 32px; color: var(--text-primary); display: flex; align-items: center; gap: 4px; }
+    .stat-value.success { color: var(--success); }
+    .stat-value.error { color: var(--error); }
+    .stat-label { font-size: 14px; color: var(--text-secondary); }
+    .results-actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .wrong-words-section { max-width: 600px; margin: 0 auto 32px; }
+    .wrong-words-title { font-size: 20px; color: var(--text-secondary); margin-bottom: 16px; text-align: center; }
+    .wrong-words-list { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .wrong-word-item { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--background-light); border-radius: var(--radius-md); border-left: 4px solid var(--error); }
+    .wrong-word-text { font-family: 'Patrick Hand', cursive; font-size: 20px; color: var(--text-primary); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .welcome-title { font-size: 40px; }
+      .welcome-description { gap: 12px; }
+      .welcome-feature { padding: 12px 16px; min-width: 100px; }
+      .topic-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+      .topic-emoji { font-size: 36px; }
+      .topic-name { font-size: 20px; }
+      .game-header { flex-direction: column; }
+      .game-score { font-size: 20px; }
+      .results-stats { gap: 16px; }
+      .stat-value { font-size: 24px; }
+      .key { min-width: 32px; height: 44px; font-size: 16px; }
+      .key-wide { min-width: 56px; font-size: 12px; }
+      .letter-box { width: 40px; height: 48px; font-size: 24px; }
+      .picture-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+      .word-text { font-size: 36px; }
+      .chinese-text { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, createContext, useContext, useReducer } = React;
+
+    // ========== Data ==========
+    const topics = [
+      {
+        id: 'animals', name: '動物', icon: '🐾', emoji: '🦁', difficulty: 1, color: '#FF6B6B',
+        words: [
+          { id: 'a1', text: 'CAT', chinese: '貓', image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=300&fit=crop' },
+          { id: 'a2', text: 'DOG', chinese: '狗', image: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&h=300&fit=crop' },
+          { id: 'a3', text: 'BIRD', chinese: '鳥', image: 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&h=300&fit=crop' },
+          { id: 'a4', text: 'FISH', chinese: '魚', image: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=400&h=300&fit=crop' },
+          { id: 'a5', text: 'RABBIT', chinese: '兔子', image: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&h=300&fit=crop' },
+          { id: 'a6', text: 'HORSE', chinese: '馬', image: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=400&h=300&fit=crop' },
+          { id: 'a7', text: 'LION', chinese: '獅子', image: 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=400&h=300&fit=crop' },
+          { id: 'a8', text: 'BEAR', chinese: '熊', image: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=400&h=300&fit=crop' },
+        ],
+      },
+      {
+        id: 'fruits', name: '水果', icon: '🍎', emoji: '🍇', difficulty: 1, color: '#4ECDC4',
+        words: [
+          { id: 'f1', text: 'APPLE', chinese: '蘋果', image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=300&fit=crop' },
+          { id: 'f2', text: 'BANANA', chinese: '香蕉', image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=300&fit=crop' },
+          { id: 'f3', text: 'ORANGE', chinese: '橙', image: 'https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=300&fit=crop' },
+          { id: 'f4', text: 'GRAPE', chinese: '葡萄', image: 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=400&h=300&fit=crop' },
+          { id: 'f5', text: 'MANGO', chinese: '芒果', image: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&h=300&fit=crop' },
+          { id: 'f6', text: 'CHERRY', chinese: '櫻桃', image: 'https://images.unsplash.com/photo-1528821128474-27f963b062bf?w=400&h=300&fit=crop' },
+          { id: 'f7', text: 'LEMON', chinese: '檸檬', image: 'https://images.unsplash.com/photo-1590502593747-42a996133562?w=400&h=300&fit=crop' },
+          { id: 'f8', text: 'PEACH', chinese: '桃子', image: 'https://images.unsplash.com/photo-1629828874514-c1e5103f2150?w=400&h=300&fit=crop' },
+        ],
+      },
+      {
+        id: 'food', name: '食物', icon: '🍕', emoji: '🍔', difficulty: 2, color: '#FFE66D',
+        words: [
+          { id: 'fd1', text: 'PIZZA', chinese: '披薩', image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop' },
+          { id: 'fd2', text: 'BURGER', chinese: '漢堡', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop' },
+          { id: 'fd3', text: 'PASTA', chinese: '義大利麵', image: 'https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=400&h=300&fit=crop' },
+          { id: 'fd4', text: 'RICE', chinese: '米飯', image: 'https://images.unsplash.com/photo-1516684732162-798a0062be99?w=400&h=300&fit=crop' },
+          { id: 'fd5', text: 'BREAD', chinese: '麵包', image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=300&fit=crop' },
+          { id: 'fd6', text: 'CAKE', chinese: '蛋糕', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop' },
+          { id: 'fd7', text: 'SUSHI', chinese: '壽司', image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400&h=300&fit=crop' },
+          { id: 'fd8', text: 'ICECREAM', chinese: '冰淇淋', image: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=400&h=300&fit=crop' },
+        ],
+      },
+      {
+        id: 'objects', name: '物品', icon: '📚', emoji: '💡', difficulty: 1, color: '#95E1D3',
+        words: [
+          { id: 'o1', text: 'CHAIR', chinese: '椅子', image: 'https://images.unsplash.com/photo-1503602642458-232111445657?w=400&h=300&fit=crop' },
+          { id: 'o2', text: 'TABLE', chinese: '桌子', image: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?w=400&h=300&fit=crop' },
+          { id: 'o3', text: 'PHONE', chinese: '電話', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=300&fit=crop' },
+          { id: 'o4', text: 'BOOK', chinese: '書', image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop' },
+          { id: 'o5', text: 'CLOCK', chinese: '時鐘', image: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?w=400&h=300&fit=crop' },
+          { id: 'o6', text: 'LAMP', chinese: '燈', image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&h=300&fit=crop' },
+          { id: 'o7', text: 'CUP', chinese: '杯子', image: 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=400&h=300&fit=crop' },
+          { id: 'o8', text: 'PEN', chinese: '筆', image: 'https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=400&h=300&fit=crop' },
+        ],
+      },
+      {
+        id: 'nature', name: '自然', icon: '🌳', emoji: '⛰️', difficulty: 2, color: '#A8E6CF',
+        words: [
+          { id: 'n1', text: 'TREE', chinese: '樹', image: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=400&h=300&fit=crop' },
+          { id: 'n2', text: 'FLOWER', chinese: '花', image: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&h=300&fit=crop' },
+          { id: 'n3', text: 'MOUNTAIN', chinese: '山', image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&h=300&fit=crop' },
+          { id: 'n4', text: 'OCEAN', chinese: '海洋', image: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400&h=300&fit=crop' },
+          { id: 'n5', text: 'RIVER', chinese: '河流', image: 'https://images.unsplash.com/photo-1475113548554-5a36f1f523d6?w=400&h=300&fit=crop' },
+          { id: 'n6', text: 'FOREST', chinese: '森林', image: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=300&fit=crop' },
+          { id: 'n7', text: 'BEACH', chinese: '沙灘', image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop' },
+          { id: 'n8', text: 'CLOUD', chinese: '雲', image: 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=400&h=300&fit=crop' },
+        ],
+      },
+      {
+        id: 'vehicles', name: '交通工具', icon: '🚗', emoji: '✈️', difficulty: 2, color: '#DDA0DD',
+        words: [
+          { id: 'v1', text: 'CAR', chinese: '汽車', image: 'https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&h=300&fit=crop' },
+          { id: 'v2', text: 'BUS', chinese: '公車', image: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=400&h=300&fit=crop' },
+          { id: 'v3', text: 'TRAIN', chinese: '火車', image: 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=400&h=300&fit=crop' },
+          { id: 'v4', text: 'PLANE', chinese: '飛機', image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=400&h=300&fit=crop' },
+          { id: 'v5', text: 'BIKE', chinese: '自行車', image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&h=300&fit=crop' },
+          { id: 'v6', text: 'BOAT', chinese: '船', image: 'https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?w=400&h=300&fit=crop' },
+          { id: 'v7', text: 'TRUCK', chinese: '卡車', image: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=400&h=300&fit=crop' },
+          { id: 'v8', text: 'SHIP', chinese: '輪船', image: 'https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?w=400&h=300&fit=crop' },
+        ],
+      },
+      {
+        id: 'clothing', name: '服裝', icon: '👕', emoji: '👗', difficulty: 2, color: '#F7DC6F',
+        words: [
+          { id: 'c1', text: 'SHIRT', chinese: '襯衫', image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=400&h=300&fit=crop' },
+          { id: 'c2', text: 'PANTS', chinese: '褲子', image: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=400&h=300&fit=crop' },
+          { id: 'c3', text: 'SHOES', chinese: '鞋子', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop' },
+          { id: 'c4', text: 'HAT', chinese: '帽子', image: 'https://images.unsplash.com/photo-1521369909029-2afed882baee?w=400&h=300&fit=crop' },
+          { id: 'c5', text: 'COAT', chinese: '外套', image: 'https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&h=300&fit=crop' },
+          { id: 'c6', text: 'DRESS', chinese: '洋裝', image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=300&fit=crop' },
+          { id: 'c7', text: 'SKIRT', chinese: '裙子', image: 'https://images.unsplash.com/photo-1583496661160-fb5886a0ebb9?w=400&h=300&fit=crop' },
+          { id: 'c8', text: 'SOCKS', chinese: '襪子', image: 'https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?w=400&h=300&fit=crop' },
+        ],
+      },
+      {
+        id: 'countries', name: '國家', icon: '🌍', emoji: '🏳️', difficulty: 2, color: '#FF8C42',
+        words: [
+          { id: 'ct1', text: 'JAPAN', chinese: '日本', image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&h=300&fit=crop' },
+          { id: 'ct2', text: 'KOREA', chinese: '韓國', image: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?w=400&h=300&fit=crop' },
+          { id: 'ct3', text: 'CHINA', chinese: '中國', image: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=400&h=300&fit=crop' },
+          { id: 'ct4', text: 'AMERICA', chinese: '美國', image: 'https://images.unsplash.com/photo-1485738422979-f5c462d49f74?w=400&h=300&fit=crop' },
+          { id: 'ct5', text: 'FRANCE', chinese: '法國', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=300&fit=crop' },
+          { id: 'ct6', text: 'GERMANY', chinese: '德國', image: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=400&h=300&fit=crop' },
+          { id: 'ct7', text: 'ITALY', chinese: '義大利', image: 'https://images.unsplash.com/photo-1515859005217-8a1f08870f59?w=400&h=300&fit=crop' },
+          { id: 'ct8', text: 'AUSTRALIA', chinese: '澳洲', image: 'https://images.unsplash.com/photo-1523482580672-f109ba8cb9be?w=400&h=300&fit=crop' },
+        ],
+      },
+      {
+        id: 'weather', name: '天氣', icon: '☀️', emoji: '🌧️', difficulty: 3, color: '#87CEEB',
+        words: [
+          { id: 'w1', text: 'SUNNY', chinese: '晴天', image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop' },
+          { id: 'w2', text: 'RAINY', chinese: '雨天', image: 'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&h=300&fit=crop' },
+          { id: 'w3', text: 'CLOUDY', chinese: '多雲', image: 'https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=400&h=300&fit=crop' },
+          { id: 'w4', text: 'SNOWY', chinese: '下雪', image: 'https://images.unsplash.com/photo-1491002052546-bf38f186af56?w=400&h=300&fit=crop' },
+          { id: 'w5', text: 'WINDY', chinese: '颳風', image: 'https://images.unsplash.com/photo-1527482797697-8795b05a13fe?w=400&h=300&fit=crop' },
+          { id: 'w6', text: 'STORMY', chinese: '暴風雨', image: 'https://images.unsplash.com/photo-1605727216801-e27ce1d0cc28?w=400&h=300&fit=crop' },
+          { id: 'w7', text: 'FOGGY', chinese: '有霧', image: 'https://images.unsplash.com/photo-1487621167305-5d248087c724?w=400&h=300&fit=crop' },
+          { id: 'w8', text: 'RAINBOW', chinese: '彩虹', image: 'https://images.unsplash.com/photo-1551649001-7a2482d98d05?w=400&h=300&fit=crop' },
+        ],
+      },
+    ];
+
+    const keyboardRows = [
+      ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+      ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+      ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫'],
+    ];
+
+    const getDifficultyStars = (difficulty) => '⭐'.repeat(difficulty) + '☆'.repeat(3 - difficulty);
+
+    // ========== Speech Hook ==========
+    const useSpeech = () => {
+      const speak = useCallback((text, options = {}) => {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = options.rate || 0.9;
+        const voices = window.speechSynthesis.getVoices();
+        const englishVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+        if (englishVoice) utterance.voice = englishVoice;
+        window.speechSynthesis.speak(utterance);
+      }, []);
+
+      return {
+        speakWord: (word) => speak(word, { rate: 0.8 }),
+        speakCorrect: () => speak('Great job!', { rate: 1 }),
+        speakWrong: (word) => speak(`The correct spelling is ${word.split('').join(' ')}, ${word}`, { rate: 0.8 }),
+      };
+    };
+
+    // ========== Game Context ==========
+    const GameContext = createContext();
+
+    const gameModes = [
+      { id: 'spell', name: '看圖拼寫', icon: '✏️', desc: '看圖片，拼出正確的英文單字', badge: '經典', color: '#FF6B6B' },
+      { id: 'picture', name: '看詞找圖', icon: '🖼️', desc: '看英文單字，選擇正確的圖片', badge: '新功能', color: '#4ECDC4' },
+      { id: 'chinese', name: '看中文拼寫', icon: '🔤', desc: '看中文，寫出對應的英文', badge: '新功能', color: '#FFE66D' },
+    ];
+
+    const initialState = {
+      screen: 'welcome',
+      gameMode: 'spell',
+      currentTopic: null,
+      currentWordIndex: 0,
+      score: 0,
+      combo: 0,
+      answers: [],
+      currentInput: '',
+      feedback: null,
+      hintsUsed: 0,
+      wordStartTime: null,
+      isMuted: false,
+      showHint1: false,
+      showHint2: false,
+      showHint3: false,
+      totalScore: 0,
+      history: [],
+      selectedPicture: null,
+      pictureOptions: [],
+    };
+
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function getPictureOptions(currentWord, allTopics, count = 4) {
+      const allWords = allTopics.flatMap(t => t.words);
+      const otherWords = allWords.filter(w => w.id !== currentWord.id);
+      const shuffled = shuffleArray(otherWords);
+      const wrongOptions = shuffled.slice(0, count - 1);
+      const allOptions = shuffleArray([currentWord, ...wrongOptions]);
+      return allOptions;
+    }
+
+    function gameReducer(state, action) {
+      switch (action.type) {
+        case 'SELECT_MODE':
+          return { ...state, gameMode: action.payload, screen: 'topics' };
+        case 'START_GAME': {
+          const currentWord = action.payload.words[0];
+          const pictureOptions = state.gameMode === 'picture' 
+            ? getPictureOptions(currentWord, topics) 
+            : [];
+          return {
+            ...state,
+            screen: 'game',
+            currentTopic: action.payload,
+            currentWordIndex: 0,
+            score: 0,
+            combo: 0,
+            answers: [],
+            currentInput: '',
+            feedback: null,
+            hintsUsed: 0,
+            wordStartTime: Date.now(),
+            showHint1: false,
+            showHint2: false,
+            showHint3: false,
+            selectedPicture: null,
+            pictureOptions,
+          };
+        }
+        case 'INPUT_LETTER':
+          return { ...state, currentInput: state.currentInput + action.payload.toUpperCase() };
+        case 'DELETE_LETTER':
+          return { ...state, currentInput: state.currentInput.slice(0, -1) };
+        case 'SELECT_PICTURE': {
+          const { wordId } = action.payload;
+          const currentWord = state.currentTopic.words[state.currentWordIndex];
+          const correct = wordId === currentWord.id;
+          const timeBonus = (Date.now() - state.wordStartTime) < 30000 ? 5 : 0;
+          const comboBonus = correct ? Math.min(state.combo * 2, 10) : 0;
+          let newScore = state.score;
+          if (correct) newScore = state.score + 10 + timeBonus + comboBonus;
+          return {
+            ...state,
+            score: Math.max(0, newScore),
+            combo: correct ? state.combo + 1 : 0,
+            selectedPicture: wordId,
+            answers: [...state.answers, {
+              wordId: currentWord.id,
+              word: currentWord.text,
+              correct,
+              correctAnswer: currentWord.text,
+            }],
+            feedback: {
+              type: correct ? 'correct' : 'wrong',
+              message: correct ? `太棒了！+${10 + timeBonus + comboBonus}分` : `正確答案是 ${currentWord.text}`,
+              score: correct ? 10 + timeBonus + comboBonus : 0,
+            },
+          };
+        }
+        case 'SUBMIT_ANSWER': {
+          const { correct, correctAnswer } = action.payload;
+          const currentWord = state.currentTopic.words[state.currentWordIndex];
+          const timeBonus = (Date.now() - state.wordStartTime) < 30000 ? 5 : 0;
+          const comboBonus = correct ? Math.min(state.combo * 2, 10) : 0;
+          const hintPenalty = (state.showHint2 ? 2 : 0) + (state.showHint3 ? 1 : 0);
+          let newScore = state.score;
+          if (correct) newScore = state.score + 10 + timeBonus + comboBonus - hintPenalty;
+          return {
+            ...state,
+            score: Math.max(0, newScore),
+            combo: correct ? state.combo + 1 : 0,
+            answers: [...state.answers, {
+              wordId: currentWord.id,
+              word: currentWord.text,
+              correct,
+              hintsUsed: state.hintsUsed,
+              correctAnswer,
+            }],
+            feedback: {
+              type: correct ? 'correct' : 'wrong',
+              message: correct ? `太棒了！+${10 + timeBonus + comboBonus - hintPenalty}分` : `正確答案是 ${correctAnswer}`,
+              score: correct ? 10 + timeBonus + comboBonus - hintPenalty : 0,
+            },
+          };
+        }
+        case 'NEXT_WORD': {
+          const nextIndex = state.currentWordIndex + 1;
+          if (nextIndex >= state.currentTopic.words.length) {
+            const newHistory = [...state.history, {
+              topicId: state.currentTopic.id,
+              topicName: state.currentTopic.name,
+              gameMode: state.gameMode,
+              score: state.score,
+              correctCount: state.answers.filter(a => a.correct).length,
+              totalCount: state.currentTopic.words.length,
+              date: new Date().toISOString(),
+            }].slice(-10);
+            const newTotalScore = state.totalScore + state.score;
+            localStorage.setItem('spellpicture_history', JSON.stringify(newHistory));
+            localStorage.setItem('spellpicture_totalScore', newTotalScore.toString());
+            return { ...state, screen: 'results', history: newHistory, totalScore: newTotalScore };
+          }
+          const nextWord = state.currentTopic.words[nextIndex];
+          const pictureOptions = state.gameMode === 'picture' 
+            ? getPictureOptions(nextWord, topics) 
+            : [];
+          return {
+            ...state,
+            currentWordIndex: nextIndex,
+            currentInput: '',
+            feedback: null,
+            hintsUsed: 0,
+            wordStartTime: Date.now(),
+            showHint1: false,
+            showHint2: false,
+            showHint3: false,
+            selectedPicture: null,
+            pictureOptions,
+          };
+        }
+        case 'USE_HINT':
+          if (action.payload === 1) return { ...state, showHint1: true, hintsUsed: state.hintsUsed + 1 };
+          if (action.payload === 2) return { ...state, showHint2: true, hintsUsed: state.hintsUsed + 1 };
+          if (action.payload === 3) return { ...state, showHint3: true, hintsUsed: state.hintsUsed + 1 };
+          return state;
+        case 'TOGGLE_MUTE':
+          return { ...state, isMuted: !state.isMuted };
+        case 'SET_SCREEN':
+          return { ...state, screen: action.payload };
+        case 'RESET_GAME':
+          return { ...initialState, totalScore: state.totalScore, history: state.history, isMuted: state.isMuted, gameMode: state.gameMode };
+        case 'LOAD_SAVED_DATA':
+          return { ...state, totalScore: action.payload.totalScore || 0, history: action.payload.history || [] };
+        default:
+          return state;
+      }
+    }
+
+    function GameProvider({ children }) {
+      const [state, dispatch] = useReducer(gameReducer, initialState);
+      useEffect(() => {
+        const savedHistory = localStorage.getItem('spellpicture_history');
+        const savedTotalScore = localStorage.getItem('spellpicture_totalScore');
+        if (savedHistory || savedTotalScore) {
+          dispatch({
+            type: 'LOAD_SAVED_DATA',
+            payload: {
+              history: savedHistory ? JSON.parse(savedHistory) : [],
+              totalScore: savedTotalScore ? parseInt(savedTotalScore, 10) : 0,
+            },
+          });
+        }
+      }, []);
+      return <GameContext.Provider value={{ state, dispatch }}>{children}</GameContext.Provider>;
+    }
+
+    const useGame = () => useContext(GameContext);
+
+    // ========== Icons (SVG) ==========
+    const Icon = ({ name, size = 24, ...props }) => {
+      const icons = {
+        star: <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+        volume: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>,
+        volumeOff: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>,
+        back: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
+        book: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+        eye: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+        help: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+        trophy: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+        rotate: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>,
+        home: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+        check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>,
+        x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+        chevronRight: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>,
+        image: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>,
+        brain: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></svg>,
+        sparkles: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>,
+      };
+      return <span style={{ display: 'flex', alignItems: 'center' }}>{icons[name]}</span>;
+    };
+
+    // ========== Stars Explosion ==========
+    function StarsExplosion() {
+      const [stars, setStars] = useState([]);
+      useEffect(() => {
+        const newStars = [];
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2;
+          const distance = 60 + Math.random() * 40;
+          newStars.push({
+            id: i,
+            x: Math.cos(angle) * distance,
+            y: Math.sin(angle) * distance,
+            delay: Math.random() * 0.2,
+            size: 10 + Math.random() * 10,
+          });
+        }
+        setStars(newStars);
+      }, []);
+      return (
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+          {stars.map((star) => (
+            <div
+              key={star.id}
+              style={{
+                position: 'absolute',
+                width: star.size,
+                height: star.size,
+                left: `calc(50% + ${star.x}px)`,
+                top: `calc(50% + ${star.y}px)`,
+                background: ['#FFD93D', '#4CAF50', '#FF6B6B', '#4ECDC4'][star.id % 4],
+                clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+                animation: `starBurst 0.6s ease-out ${star.delay}s forwards`,
+              }}
+            />
+          ))}
+        </div>
+      );
+    }
+
+    // ========== Welcome Screen ==========
+    function WelcomeScreen() {
+      const { state, dispatch } = useGame();
+      const handleStart = () => dispatch({ type: 'SET_SCREEN', payload: 'modes' });
+      return (
+        <div className="welcome-screen">
+          <div className="welcome-logo">
+            <svg width="80" height="80" viewBox="0 0 100 100">
+              <rect width="100" height="100" rx="20" fill="#2D5A4A"/>
+              <text x="50" y="68" fontFamily="Arial" fontSize="50" fontWeight="bold" textAnchor="middle" fill="#FFD93D">S</text>
+              <circle cx="75" cy="25" r="8" fill="#FFD93D"/>
+              <circle cx="82" cy="35" r="5" fill="#FFD93D"/>
+            </svg>
+          </div>
+          <h1 className="welcome-title">SpellPicture</h1>
+          <p className="welcome-subtitle">看圖拼寫英文單字，透過圖像記憶加深印象！</p>
+          <div className="welcome-description">
+            <div className="welcome-feature">
+              <Icon name="image" size={32} />
+              <span className="welcome-feature-text">看圖學單字</span>
+            </div>
+            <div className="welcome-feature">
+              <Icon name="volume" size={32} />
+              <span className="welcome-feature-text">語音朗讀</span>
+            </div>
+            <div className="welcome-feature">
+              <Icon name="brain" size={32} />
+              <span className="welcome-feature-text">錯字複習</span>
+            </div>
+            <div className="welcome-feature">
+              <Icon name="sparkles" size={32} />
+              <span className="welcome-feature-text">遊戲闖關</span>
+            </div>
+          </div>
+          <button className="start-button" onClick={handleStart}>開始練習</button>
+          {state.totalScore > 0 && (
+            <div className="total-score">
+              歷史最高分：
+              <span>{state.totalScore}</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ========== Mode Selection Screen ==========
+    function ModeScreen() {
+      const { dispatch } = useGame();
+      const handleSelectMode = (mode) => dispatch({ type: 'SELECT_MODE', payload: mode });
+      const handleBack = () => dispatch({ type: 'SET_SCREEN', payload: 'welcome' });
+      return (
+        <div className="mode-screen">
+          <div className="mode-header">
+            <h2 className="mode-title">選擇學習模式</h2>
+            <button className="back-button" onClick={handleBack}>
+              <Icon name="back" size={16} /> 返回
+            </button>
+          </div>
+          <div className="mode-grid">
+            {gameModes.map((mode, index) => (
+              <div
+                key={mode.id}
+                className="mode-card"
+                onClick={() => handleSelectMode(mode.id)}
+                style={{ '--card-color': mode.color, animationDelay: `${index * 0.1}s` }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && handleSelectMode(mode.id)}
+              >
+                <span className="mode-badge" style={{ background: mode.color }}>{mode.badge}</span>
+                <div className="mode-icon">{mode.icon}</div>
+                <h3 className="mode-name" style={{ color: mode.color }}>{mode.name}</h3>
+                <p className="mode-desc">{mode.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ========== Topic Screen ==========
+    function TopicScreen() {
+      const { state, dispatch } = useGame();
+      const currentMode = gameModes.find(m => m.id === state.gameMode);
+      const handleTopicSelect = (topic) => dispatch({ type: 'START_GAME', payload: topic });
+      const handleBack = () => dispatch({ type: 'SET_SCREEN', payload: 'modes' });
+      return (
+        <div className="topic-screen">
+          <div className="topic-header">
+            <h2 className="topic-title" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span>{currentMode?.icon}</span> {currentMode?.name}
+            </h2>
+            <button className="back-button" onClick={handleBack}>
+              <Icon name="back" size={16} /> 返回
+            </button>
+          </div>
+          <div className="topic-grid">
+            {topics.map((topic, index) => (
+              <div
+                key={topic.id}
+                className="topic-card"
+                onClick={() => handleTopicSelect(topic)}
+                style={{ '--card-color': topic.color, animationDelay: `${index * 0.1}s` }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && handleTopicSelect(topic)}
+              >
+                <div className="topic-emoji">{topic.emoji}</div>
+                <h3 className="topic-name">{topic.name}</h3>
+                <div className="topic-meta">
+                  <span className="topic-difficulty">{getDifficultyStars(topic.difficulty)}</span>
+                  <span className="topic-words">
+                    <Icon name="book" size={14} /> {topic.words.length} 題
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ========== Game Screen ==========
+    function GameScreen() {
+      const { state, dispatch } = useGame();
+      const { speakWord, speakCorrect, speakWrong } = useSpeech();
+      const [imageLoaded, setImageLoaded] = useState(false);
+      const [showScorePopup, setShowScorePopup] = useState(false);
+      const [shake, setShake] = useState(false);
+
+      const { gameMode, currentTopic, currentWordIndex, currentInput, feedback, showHint1, showHint2, showHint3, score, isMuted, selectedPicture, pictureOptions } = state;
+      const currentWord = currentTopic.words[currentWordIndex];
+      const progress = (currentWordIndex / currentTopic.words.length) * 100;
+      const inputLength = currentInput.length;
+      const wordLength = currentWord.text.length;
+
+      useEffect(() => { setImageLoaded(false); }, [currentWordIndex]);
+      useEffect(() => {
+        if (feedback?.type === 'correct') {
+          const timer = setTimeout(() => dispatch({ type: 'NEXT_WORD' }), 1500);
+          return () => clearTimeout(timer);
+        }
+      }, [feedback, dispatch]);
+
+      const handleKeyPress = useCallback((letter) => {
+        if (feedback?.type === 'correct') return;
+        if (inputLength < wordLength) dispatch({ type: 'INPUT_LETTER', payload: letter });
+      }, [dispatch, feedback, inputLength, wordLength]);
+
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (feedback?.type === 'correct') return;
+          if (gameMode === 'chinese' || gameMode === 'spell') {
+            const key = e.key.toUpperCase();
+            if (/^[A-Z]$/.test(key)) handleKeyPress(key);
+            else if (e.key === 'Backspace') dispatch({ type: 'DELETE_LETTER' });
+            else if (e.key === 'Enter' && inputLength === wordLength) handleSubmit();
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [handleKeyPress, inputLength, wordLength, feedback, gameMode]);
+
+      const handleSubmit = () => {
+        if (inputLength !== wordLength) return;
+        const correct = currentInput.toUpperCase() === currentWord.text;
+        if (correct) {
+          if (!isMuted) speakCorrect();
+          setShowScorePopup(true);
+          setTimeout(() => setShowScorePopup(false), 800);
+        } else {
+          if (!isMuted) speakWrong(currentWord.text);
+          setShake(true);
+          setTimeout(() => setShake(false), 500);
+        }
+        dispatch({ type: 'SUBMIT_ANSWER', payload: { correct, correctAnswer: currentWord.text } });
+      };
+
+      const handlePictureSelect = (word) => {
+        if (feedback?.type === 'correct') return;
+        if (!isMuted) {
+          if (word.id === currentWord.id) {
+            speakCorrect();
+          } else {
+            speakWrong(currentWord.text);
+          }
+        }
+        setShake(word.id !== currentWord.id);
+        setTimeout(() => setShake(false), 500);
+        dispatch({ type: 'SELECT_PICTURE', payload: { wordId: word.id } });
+      };
+
+      const handleNextWord = () => dispatch({ type: 'NEXT_WORD' });
+      const handleHint1 = () => dispatch({ type: 'USE_HINT', payload: 1 });
+      const handleHint2 = () => { if (!showHint2) dispatch({ type: 'USE_HINT', payload: 2 }); };
+      const handleHint3 = () => { if (!showHint3) { dispatch({ type: 'USE_HINT', payload: 3 }); if (!isMuted) speakWord(currentWord.text); } };
+      const handlePlaySound = () => { if (!isMuted) speakWord(currentWord.text); };
+      const handleToggleMute = () => dispatch({ type: 'TOGGLE_MUTE' });
+      const handleBack = () => dispatch({ type: 'RESET_GAME' });
+
+      const renderLetterBoxes = () => {
+        const boxes = [];
+        for (let i = 0; i < wordLength; i++) {
+          const letter = currentInput[i] || '';
+          const isFilled = i < inputLength;
+          let className = 'letter-box';
+          if (isFilled) className += ' filled';
+          if (feedback?.type === 'correct') className += ' correct';
+          if (feedback?.type === 'wrong' && isFilled) className += ' wrong';
+          boxes.push(<div key={i} className={className}>{letter || '_'}</div>);
+        }
+        return boxes;
+      };
+
+      // 看圖拼寫模式 (Spell Mode)
+      const renderSpellMode = () => (
+        <>
+          <div className="game-image-section" style={{ animation: shake ? 'shake 0.5s ease' : '' }}>
+            <div className="game-image-container">
+              {!imageLoaded && <div className="image-loading" />}
+              <img
+                src={currentWord.image}
+                alt="題目圖片"
+                style={{ display: imageLoaded ? 'block' : 'none' }}
+                onLoad={() => setImageLoaded(true)}
+              />
+              {showScorePopup && <div className="score-popup">+{feedback?.score}</div>}
+              {feedback?.type === 'correct' && <StarsExplosion />}
+            </div>
+
+            <div className="hint-bar">
+              <button className="hint-button" onClick={handleHint1} title="顯示字母數量">
+                <Icon name="eye" size={16} /> 字母數量
+              </button>
+              <button className="hint-button" onClick={handleHint2} disabled={showHint2} title="顯示第一個字母 (-2分)">
+                <Icon name="help" size={16} /> 第一個字母 {!showHint2 && <span className="hint-cost">-2</span>}
+              </button>
+              <button className="hint-button" onClick={handleHint3} disabled={showHint3} title="朗讀單字 (-1分)">
+                <Icon name="volume" size={16} /> 聽發音 {!showHint3 && <span className="hint-cost">-1</span>}
+              </button>
+            </div>
+
+            <div className="word-hints">
+              {showHint1 && (
+                <div className="hint-display">
+                  <div>
+                    <div className="hint-label">字母數量</div>
+                    <div className="hint-value">{wordLength} 個字母</div>
+                  </div>
+                </div>
+              )}
+              {showHint1 && (
+                <div className="letter-count">
+                  {Array.from(currentWord.text).map((letter, i) => (
+                    <div key={i} className={`letter-slot ${showHint2 && i === 0 ? 'first-letter' : ''}`}>
+                      {showHint2 && i === 0 ? letter : '?'}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      );
+
+      // 看詞找圖模式 (Picture Mode)
+      const renderPictureMode = () => (
+        <div className="game-image-section" style={{ animation: shake ? 'shake 0.5s ease' : '' }}>
+          <div className="word-display">
+            <div className="word-text">{currentWord.text}</div>
+            <div className="word-pronunciation">
+              <button className="speaker-button" onClick={handlePlaySound}>
+                <Icon name="volume" size={24} />
+              </button>
+              <span>點擊喇叭聽發音</span>
+            </div>
+          </div>
+
+          <div className="picture-grid">
+            {pictureOptions.map((word) => {
+              let className = 'picture-option';
+              if (feedback) {
+                if (word.id === currentWord.id) className += ' correct';
+                else if (word.id === selectedPicture) className += ' wrong';
+              }
+              return (
+                <div
+                  key={word.id}
+                  className={className}
+                  onClick={() => handlePictureSelect(word)}
+                  style={{ animation: `popIn 0.3s ease-out ${pictureOptions.indexOf(word) * 0.1}s both` }}
+                >
+                  <img src={word.image} alt="選項圖片" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+
+      // 看中文拼寫模式 (Chinese Mode)
+      const renderChineseMode = () => (
+        <>
+          <div className="game-image-section" style={{ animation: shake ? 'shake 0.5s ease' : '' }}>
+            <div className="game-image-container">
+              {!imageLoaded && <div className="image-loading" />}
+              <img
+                src={currentWord.image}
+                alt="題目圖片"
+                style={{ display: imageLoaded ? 'block' : 'none' }}
+                onLoad={() => setImageLoaded(true)}
+              />
+              {showScorePopup && <div className="score-popup">+{feedback?.score}</div>}
+              {feedback?.type === 'correct' && <StarsExplosion />}
+            </div>
+
+            <div className="chinese-prompt">
+              <div className="chinese-text">{currentWord.chinese}</div>
+              <div className="chinese-hint">請拼寫出這個物品的英文名稱</div>
+            </div>
+
+            <div className="hint-bar">
+              <button className="hint-button" onClick={handleHint1} title="顯示字母數量">
+                <Icon name="eye" size={16} /> 字母數量
+              </button>
+              <button className="hint-button" onClick={handleHint2} disabled={showHint2} title="顯示第一個字母 (-2分)">
+                <Icon name="help" size={16} /> 第一個字母 {!showHint2 && <span className="hint-cost">-2</span>}
+              </button>
+              <button className="hint-button" onClick={handleHint3} disabled={showHint3} title="朗讀單字 (-1分)">
+                <Icon name="volume" size={16} /> 聽發音 {!showHint3 && <span className="hint-cost">-1</span>}
+              </button>
+            </div>
+
+            <div className="word-hints">
+              {showHint1 && (
+                <div className="hint-display">
+                  <div>
+                    <div className="hint-label">字母數量</div>
+                    <div className="hint-value">{wordLength} 個字母</div>
+                  </div>
+                </div>
+              )}
+              {showHint1 && (
+                <div className="letter-count">
+                  {Array.from(currentWord.text).map((letter, i) => (
+                    <div key={i} className={`letter-slot ${showHint2 && i === 0 ? 'first-letter' : ''}`}>
+                      {showHint2 && i === 0 ? letter : '?'}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      );
+
+      return (
+        <div className="game-screen">
+          <div className="game-header">
+            <div className="game-score">
+              <Icon name="star" size={24} /> {score}
+            </div>
+            <div className="game-progress">
+              <span className="game-progress-text">{currentWordIndex + 1} / {currentTopic.words.length}</span>
+              <div className="progress-bar" style={{ width: '120px' }}>
+                <div className="progress-fill" style={{ width: `${progress}%` }} />
+              </div>
+            </div>
+            <div className="game-controls">
+              <button className={`control-button ${isMuted ? 'muted' : ''}`} onClick={handleToggleMute} title={isMuted ? '開啟音效' : '靜音'}>
+                <Icon name={isMuted ? 'volumeOff' : 'volume'} size={20} />
+              </button>
+              <button className="control-button" onClick={handleBack} title="返回首頁">
+                <Icon name="back" size={20} />
+              </button>
+            </div>
+          </div>
+
+          <div className="game-content">
+            {gameMode === 'spell' && renderSpellMode()}
+            {gameMode === 'picture' && renderPictureMode()}
+            {gameMode === 'chinese' && renderChineseMode()}
+
+            <div className="feedback-section">
+              {feedback && (
+                <div className={`feedback-${feedback.type}`}>
+                  <div className="feedback-icon">{feedback.type === 'correct' ? '🎉' : '🤔'}</div>
+                  <div className="feedback-message">{feedback.message}</div>
+                  {feedback.type === 'wrong' && (
+                    <>
+                      <div className="feedback-answer">{currentWord.text}</div>
+                      <div className="feedback-actions">
+                        <button className="btn btn-primary" onClick={handleNextWord}>
+                          <Icon name="chevronRight" size={16} /> 下一題
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {!feedback && (gameMode === 'spell' || gameMode === 'chinese') && (
+              <>
+                <div className="input-section">
+                  <div className="letter-input-display">{renderLetterBoxes()}</div>
+                  <div className="submit-section">
+                    <button className="btn btn-secondary" onClick={() => dispatch({ type: 'DELETE_LETTER' })}>刪除</button>
+                    <button className="btn btn-primary" onClick={handleSubmit} disabled={inputLength !== wordLength}>送出答案</button>
+                    <button className="btn btn-secondary" onClick={handlePlaySound}>
+                      <Icon name="volume" size={16} /> 朗讀
+                    </button>
+                  </div>
+                </div>
+
+                <div className="keyboard-container">
+                  <div className="keyboard">
+                    {keyboardRows.map((row, rowIndex) => (
+                      <div key={rowIndex} className="keyboard-row">
+                        {row.map((key) => (
+                          <button
+                            key={key}
+                            className={`key ${key === '⌫' ? 'key-wide' : ''}`}
+                            onClick={() => key === '⌫' ? dispatch({ type: 'DELETE_LETTER' }) : handleKeyPress(key)}
+                          >
+                            {key}
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // ========== Results Screen ==========
+    function ResultsScreen() {
+      const { state, dispatch } = useGame();
+      const { speakWord } = useSpeech();
+      const { score, currentTopic, answers } = state;
+      const correctCount = answers.filter(a => a.correct).length;
+      const totalCount = answers.length;
+      const accuracy = Math.round((correctCount / totalCount) * 100);
+      const wrongAnswers = answers.filter(a => !a.correct);
+
+      const handlePlayAgain = () => dispatch({ type: 'START_GAME', payload: currentTopic });
+      const handleGoHome = () => { dispatch({ type: 'RESET_GAME' }); dispatch({ type: 'SET_SCREEN', payload: 'welcome' }); };
+      const handleRetryWrong = () => {
+        const wrongWords = wrongAnswers.map(w => currentTopic.words.find(tw => tw.id === w.wordId));
+        if (wrongWords.length > 0) {
+          const retryTopic = { ...currentTopic, id: 'retry', name: '錯字複習', words: wrongWords };
+          dispatch({ type: 'START_GAME', payload: retryTopic });
+        }
+      };
+
+      return (
+        <div className="results-screen">
+          <div className="results-header">
+            <Icon name="trophy" size={64} />
+            <h1 className="results-title">練習完成！</h1>
+            <p className="results-subtitle">{currentTopic.name}主題練習結果</p>
+          </div>
+
+          <div className="results-card card animate-slide-up">
+            <div className="results-score">{score}</div>
+            <div className="results-score-label">總得分</div>
+            <div className="results-stats">
+              <div className="stat-item">
+                <div className="stat-value success"><Icon name="check" size={20} />{correctCount}</div>
+                <div className="stat-label">答對</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value error"><Icon name="x" size={20} />{wrongAnswers.length}</div>
+                <div className="stat-label">答錯</div>
+              </div>
+              <div className="stat-item">
+                <div className="stat-value">{accuracy}%</div>
+                <div className="stat-label">正確率</div>
+              </div>
+            </div>
+            <div className="results-actions">
+              <button className="btn btn-primary" onClick={handlePlayAgain}>
+                <Icon name="rotate" size={16} /> 再玩一次
+              </button>
+              <button className="btn btn-secondary" onClick={handleGoHome}>
+                <Icon name="home" size={16} /> 返回首頁
+              </button>
+            </div>
+          </div>
+
+          {wrongAnswers.length > 0 && (
+            <div className="wrong-words-section">
+              <h3 className="wrong-words-title">錯字複習 ({wrongAnswers.length} 個)</h3>
+              <div className="wrong-words-list">
+                {wrongAnswers.map((item, index) => (
+                  <div key={index} className="wrong-word-item">
+                    <span className="wrong-word-text">{item.word}</span>
+                    <button className="control-button" onClick={() => speakWord(item.word)} title="朗讀發音">
+                      <Icon name="volume" size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 24, textAlign: 'center' }}>
+                <button className="btn btn-success" onClick={handleRetryWrong}>
+                  <Icon name="rotate" size={16} /> 針對錯字練習
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ========== App ==========
+    function App() {
+      const { state } = useGame();
+      return (
+        <div className="app">
+          <div className="bg-decoration bg-circle bg-circle-1" />
+          <div className="bg-decoration bg-circle bg-circle-2" />
+          <div className="bg-decoration bg-circle bg-circle-3" />
+          <main className="main-content">
+            {state.screen === 'welcome' && <WelcomeScreen />}
+            {state.screen === 'modes' && <ModeScreen />}
+            {state.screen === 'topics' && <TopicScreen />}
+            {state.screen === 'game' && <GameScreen />}
+            {state.screen === 'results' && <ResultsScreen />}
+          </main>
+        </div>
+      );
+    }
+
+    // ========== Render ==========
+    function Root() {
+      return (
+        <GameProvider>
+          <App />
+        </GameProvider>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
+  </script>
+</body>
+</html>
